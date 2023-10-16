@@ -14,7 +14,11 @@ $ make build
 ```
 
 ## How to use
-1. make sure carbon is initialised with goleveldb as the backend, and has `.db` files in `/.carbon/data`
-2. run the binary, and rocksdb `.db` files should be created in the `./output` directory
-3. copy and replace the goleveldb `.db` files with the generated ones, then change the `db_backend` option in `/.carbon/config/config.toml` to rocksdb
-4. restart carbon, and verify from the logs that the chain is continuing from the previous block height
+1. make sure carbon is initialised with goleveldb as the backend, and has `.db` files in `.carbon/data`
+2. run the binary, specifying custom in/out directories using the flags if needed, and rocksdb `.db` files will be created in the output directory
+
+    ```sh
+    $ ./db-convert -dbDir="database file dir" -outDir="output file dir"
+    ```
+3. copy and replace the goleveldb `.db` files with the generated ones, then change the `db_backend` option in `.carbon/config/config.toml` to rocksdb
+4. restart carbon (ensure that it is built with rocksdbflags), and verify that the chain is continuing from the previous block height

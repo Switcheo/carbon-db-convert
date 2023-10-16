@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"flag"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -16,10 +17,6 @@ import (
 )
 
 func main() {
-	convertLevelDbRocksDb()
-}
-
-func convertLevelDbRocksDb() {
 	o := &opt.Options{
 		// The default value is nil
 		Filter: filter.NewBloomFilter(10),
@@ -30,7 +27,7 @@ func convertLevelDbRocksDb() {
 		CompactionTableSize:                   8 * opt.MiB,
 		CompactionTotalSize:                   40 * opt.MiB,
 		CompactionTotalSizeMultiplierPerLevel: []float64{1, 1, 10, 100, 1000, 10000, 100000},
-		// This option is the key for the speed
+		
 		DisableSeeksCompaction: true,
 	}
 
@@ -41,17 +38,28 @@ func convertLevelDbRocksDb() {
 	}
 	// default db directory: $HOME/.carbon/data/
 	dbDir := filepath.Join(home, ".carbon", "data")
-	
 	// get root directory of this project
 	_, b, _, _ := runtime.Caller(0)
 	// default output directory: $ROOT/output/
 	outputDir := filepath.Join(filepath.Dir(b), "/output")
 
+	dbDirFlag := flag.String("dbDir", dbDir, "directory containing leveldb files")
+	outputDirFlag := flag.String("outDir", outputDir, "directory for generated db files")
+
+	if len(os.Args[1:]) < 2 {
+		fmt.Printf("Using default values for the db and/or output directories.\n")
+		fmt.Printf("Specify using : db-convert -dbDir= <directory> -outDir= <directory>\n\n")
+	}
+
+	// parse flag string pointers
+	flag.Parse()
+	dbDir = *dbDirFlag
+	outputDir = *outputDirFlag
+
 	createErr := os.MkdirAll(outputDir, os.ModePerm)
 	if createErr != nil {
 		panic(createErr)
 	}
-	outputDir, _ = filepath.Abs(outputDir)
 	fmt.Printf("output dir: %s\n", outputDir)
 
 	// walk through and open leveldb files in the .carbon/data directory
@@ -72,7 +80,7 @@ func convertLevelDbRocksDb() {
 			}
 
 			// create a rocksdb file with the same name in the output directory
-			fmt.Printf("Created rocksdb file based on: %s\n", dir.Name())
+			fmt.Println("Creating rocksdb file...")
 			rocksDb, newDbErr := cdb.NewDB(dbName, cdb.RocksDBBackend, outputDir)
 
 			if newDbErr != nil {
@@ -85,8 +93,7 @@ func convertLevelDbRocksDb() {
 				panic(itrErr)
 			}
 
-			offset := 0
-
+			count := 0
 			for ; itr.Valid(); itr.Next() {
 				key := itr.Key()
 				value := itr.Value()
@@ -97,10 +104,10 @@ func convertLevelDbRocksDb() {
 					panic(err)
 				}
 
-				offset++
+				count++
 
-				if offset%10000 == 0 {
-					// fmt.Println(offset)
+				if count%10000 == 0 {
+					fmt.Printf("Count: %d", count)
 					runtime.GC() // Force GC
 				}
 			}
