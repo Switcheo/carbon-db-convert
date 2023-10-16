@@ -21,4 +21,4 @@ $ make build
     $ ./db-convert -dbDir="database file dir" -outDir="output file dir"
     ```
 3. copy and replace the goleveldb `.db` files with the generated ones, then change the `db_backend` option in `.carbon/config/config.toml` to rocksdb
-4. restart carbon (ensure that it is built with rocksdbflags), and verify that the chain is continuing from the previous block height
+4. restart carbon (ensure that it is built with rocksdb flags), and verify that the chain is continuing from the previous block height
