@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -76,7 +77,7 @@ func main() {
 			lvlDb, dbErr := cdb.NewGoLevelDBWithOpts(dbName, filepath.Dir(path), o)
 
 			if dbErr != nil {
-				panic(err)
+				panic(dbErr)
 			}
 
 			// create a rocksdb file with the same name in the output directory
@@ -107,7 +108,7 @@ func main() {
 				count++
 
 				if count%10000 == 0 {
-					fmt.Printf("Count: %d", count)
+					fmt.Printf("Count: %d\n", count)
 					runtime.GC() // Force GC
 				}
 			}
@@ -122,4 +123,64 @@ func main() {
 		println("filepath WalkDir error!")
 		panic(fileErr)
 	}
+}
+
+// version of the main iteration for use in testing/benching
+func iterateDb(lvlDbPath string, dbName string, outputDir string) {
+	
+	o := &opt.Options{
+		// The default value is nil
+		Filter: filter.NewBloomFilter(10),
+		// Use 1 GiB instead of default 8 MiB
+		BlockCacheCapacity: opt.GiB,
+		// Use 64 MiB instead of default 4 MiB
+		WriteBuffer:                           64 * opt.MiB,
+		CompactionTableSize:                   8 * opt.MiB,
+		CompactionTotalSize:                   40 * opt.MiB,
+		CompactionTotalSizeMultiplierPerLevel: []float64{1, 1, 10, 100, 1000, 10000, 100000},
+		
+		DisableSeeksCompaction: true,
+	}
+
+	lvlDb, dbErr := cdb.NewGoLevelDBWithOpts(dbName, filepath.Dir(lvlDbPath), o)
+
+	if dbErr != nil {
+		panic(dbErr)
+	}
+
+	// create a rocksdb file with the same name in the output directory
+	rocksDb, newDbErr := cdb.NewDB(dbName, cdb.RocksDBBackend, outputDir)
+
+	if newDbErr != nil {
+		panic(newDbErr)
+	}
+
+	itr, itrErr := lvlDb.Iterator(nil, nil)
+
+	if itrErr != nil {
+		panic(itrErr)
+	}
+
+	count := 0
+	for ; itr.Valid(); itr.Next() {
+		key := itr.Key()
+		value := itr.Value()
+
+		err := rocksDb.Set(key, value)
+
+		if err != nil {
+			panic(err)
+		}
+
+		count++
+
+		if count%10000 == 0 {
+			// fmt.Printf("Count: %d\n", count)
+			runtime.GC() // Force GC
+		}
+	}
+
+	itr.Close()
+	rocksDb.Close()
+	lvlDb.Close()
 }
