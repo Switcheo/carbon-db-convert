@@ -51,7 +51,7 @@ $ make build
     make build
     ```
 
-3. Ensure you have enough space for conversion. Below are an estimation of convert size.
+3. Ensure you have enough space for conversion. Below are an estimation of additional space required for /rocksdata convert size.
 
     ```bash
     # before
