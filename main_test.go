@@ -22,7 +22,7 @@ var pathTable = []struct {
 // Run: go test -bench=. -benchmem -tags rocksdb
 func BenchmarkIterateDb(b *testing.B) {
 	// set the output directory for the generated db files (replace with your own dirs!)
-	const outputDir = "db-convert/testing/output/"
+	const outputDir = "carbon-db-convert/testing/output/"
 	for _, v := range pathTable {
 		b.Run(fmt.Sprintf("db-%s", v.dbName), func(b *testing.B) {
             for i := 0; i < b.N; i++ {

@@ -49,7 +49,7 @@ func main() {
 
 	if len(os.Args[1:]) < 2 {
 		fmt.Printf("Using default values for the db and/or output directories.\n")
-		fmt.Printf("Specify using : db-convert -dbDir= <directory> -outDir= <directory>\n\n")
+		fmt.Printf("Specify using : carbon-db-convert -dbDir= <directory> -outDir= <directory>\n\n")
 	}
 
 	// parse flag string pointers

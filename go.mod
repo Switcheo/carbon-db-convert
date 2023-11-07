@@ -1,4 +1,4 @@
-module db-convert
+module carbon-db-convert
 
 go 1.20
 
