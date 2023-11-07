@@ -76,7 +76,12 @@ $ make build
 
 4. Convert leveldb to rocksdb
 
+    Ensure that your carbon node has stopped
+    ```bash
+    sudo systemctl carbond stop
+    ```
 
+    Convert in background
     ```bash
 
     nohup ./carbon-db-convert -dbDir="$HOME/.carbon/data/application.db" -outDir="$HOME/.carbon/rocksdata" > convert_application.out 2>&1 &
@@ -90,6 +95,7 @@ $ make build
 
     ```bash
     # estimated progress using logs
+    tail -f convert_*.out
 
     # convert_application.out
     Count: 7730000
@@ -102,10 +108,10 @@ $ make build
     ```
 
 5. Ensure process has completed and no errors in logs
-   ```bash
-   ps aux | grep convert_
-   tail convert_*.out
-   ```
+    ```bash
+    ps aux | grep convert_
+    tail convert_*.out
+    ```
 
 6. Move /rocksdbdata to /data
     ```bash
@@ -113,4 +119,16 @@ $ make build
     rm -rf ~/.carbon/data/blockstore.db && mv ~/.carbon/rocksdata/blockstore.db ~/.carbon/data
     rm -rf ~/.carbon/data/state.db && mv ~/.carbon/rocksdata/state.db ~/.carbon/data
     rm -rf ~/.carbon/data/tx_index.db && mv ~/.carbon/rocksdata/tx_index.db ~/.carbon/data
+    ```
+
+7. Update carbond to use rocksdb
+
+    ```bash
+    # ~/.carbon/config/config.toml
+    db_backend = "rocksdb"
+    ```
+
+8. Start carbond and monitor logs, recommended 64GB ram.
+    ```bash
+    sudo systemctl start carbond
     ```
